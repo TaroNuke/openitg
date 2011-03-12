@@ -38,6 +38,8 @@
 #include "ProfileManager.h"
 #include "StatsManager.h"
 
+#define HOLDHEAD_MISS_NG				THEME->GetMetricB(m_sName,"NGForMissingHoldHead")
+
 CString JUDGMENT_X_NAME( size_t p, size_t both_sides )		{ return "JudgmentXOffset" + (both_sides ? CString("BothSides") : ssprintf("OneSideP%d",int(p+1)) ); }
 CString COMBO_X_NAME( size_t p, size_t both_sides )			{ return "ComboXOffset" + (both_sides ? CString("BothSides") : ssprintf("OneSideP%d",int(p+1)) ); }
 CString ATTACK_DISPLAY_X_NAME( size_t p, size_t both_sides ){ return "AttackDisplayXOffset" + (both_sides ? CString("BothSides") : ssprintf("OneSideP%d",int(p+1)) ); }
@@ -601,10 +603,21 @@ void Player::Update( float fDeltaTime )
 				}
 			}
 
-			/* check for NG.  If the head was missed completely, don't count an NG. */
-			if( bSteppedOnTapNote && fLife == 0 )	// the player has not pressed the button for a long time!
-				hns = HNS_NG;
-
+			// TaroNuke: "Does missing a hold head count as an NG?" is now a metric
+			if( HOLDHEAD_MISS_NG )
+			{
+				if( fLife == 0 )	// the player has not pressed the button for a long time OR missed it.
+				{
+					hns = HNS_NG;
+				}
+			} else
+			{
+				if( bSteppedOnTapNote && fLife == 0 )	// the player has not pressed the button for a long time!
+				{	
+					hns = HNS_NG;
+				}
+			}
+			
 			// check for OK
 			if( iSongRow >= iEndRow && bSteppedOnTapNote && fLife > 0 )	// if this HoldNote is in the past
 			{
